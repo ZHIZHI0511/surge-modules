@@ -1,0 +1,8 @@
+#!name=元道经纬相机开屏拦截-测试版
+#!desc=仅测试拦截实测 vista.divms.cn/adn/v2/getAd。未验证真机效果，可能触发备用广告或等待。异常时禁用本模块回滚；不修改初始化、定位、拍照及团队接口。MITM仅追加vista.divms.cn，该主机所有HTTPS流量均可能被解密。
+
+[URL Rewrite]
+^https://vista\.divms\.cn/adn/v2/getAd(?:\?|$) _ reject
+
+[MITM]
+hostname = %APPEND% vista.divms.cn
