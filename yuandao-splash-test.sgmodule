@@ -1,5 +1,5 @@
-#!name=元道经纬相机去广告-测试版 v3
-#!desc=v3：基于完整HAR抓包，精准处理元道经纬相机广告总开关与配置接口（api.lbs.wintaosaas.com/api/adStrategy/match、adConfig/list、adConfig/newList、adRecord/add），并拦截实测第三方广告聚合与竞价通道（buluken.com、baihemob.com、hzjizhun.cn、hzzfcm.com、shunchangzhixing.com、yunxish.com、iggrowth.cn、vista.divms.cn/adn/v2/getAd、jt-sdk-ios.oss-cn-beijing.aliyuncs.com/iOSConfig.txt）。不修改定位、天气、拍照、水印模板及团队/用户业务接口。异常时禁用本模块即可回滚。
+#!name=元道经纬相机去广告-测试版 v4
+#!desc=v4：修复 v3 因 Map Local 返回 data:null 取代 AES 密文字符串导致的解包闪退；改为 URL Rewrite reject 元道广告配置接口（api.lbs.wintaosaas.com/api/adStrategy/match、adConfig/list、adConfig/newList、adRecord/add），并拦截第三方广告聚合与竞价通道（buluken.com、baihemob.com、hzjizhun.cn、hzzfcm.com、shunchangzhixing.com、yunxish.com、iggrowth.cn、vista.divms.cn/adn/v2/getAd、jt-sdk-ios.oss-cn-beijing.aliyuncs.com/iOSConfig.txt）。不修改定位、天气、拍照、水印模板及团队/用户业务接口。异常时禁用本模块即可回滚。
 
 [Rule]
 DOMAIN-SUFFIX,buluken.com,REJECT
@@ -12,15 +12,11 @@ DOMAIN,cpc-service-square.iggrowth.cn,REJECT
 DOMAIN,sdkquic.e.qq.com,REJECT
 
 [URL Rewrite]
+^https://api\.lbs\.wintaosaas\.com/api/(?:adStrategy/match|adConfig/(?:newList|list)|adRecord/add)(?:\?|$) _ reject
 ^https://vista\.divms\.cn/adn/v2/getAd(?:\?|$) _ reject
 ^https?://admin\.hzjizhun\.cn/(?:infoConfig|errorReport|checkCd|setGInfo|base)/833269(?:\?|$) _ reject
 ^https?://ad\.baihemob\.com/(?:infoConfig|checkCd|setGInfo)/490252(?:\?|$) _ reject
 ^https://jt-sdk-ios\.oss-cn-beijing\.aliyuncs\.com/iOSConfig\.txt(?:\?|$) _ reject
-
-[Map Local]
-^https://api\.lbs\.wintaosaas\.com/api/adStrategy/match(?:\?|$) data-type=text data="{\"code\":200,\"message\":\"SUCCESS\",\"data\":{\"strategyId\":1,\"adEnabled\":false,\"adTypeRules\":[]},\"success\":true}" status-code=200 header="Content-Type:application/json"
-^https://api\.lbs\.wintaosaas\.com/api/adConfig/(?:newList|list)(?:\?|$) data-type=text data="{\"code\":200,\"message\":\"SUCCESS\",\"data\":null,\"success\":true}" status-code=200 header="Content-Type:application/json"
-^https://api\.lbs\.wintaosaas\.com/api/adRecord/add(?:\?|$) data-type=text data="{\"code\":200,\"message\":\"SUCCESS\",\"data\":null,\"success\":true}" status-code=200 header="Content-Type:application/json"
 
 [MITM]
 hostname = %APPEND% api.lbs.wintaosaas.com, vista.divms.cn, ad.baihemob.com, jt-sdk-ios.oss-cn-beijing.aliyuncs.com
