@@ -1,5 +1,5 @@
-#!name=元道经纬相机去广告-测试版 v4
-#!desc=v4：修复 v3 因 Map Local 返回 data:null 取代 AES 密文字符串导致的解包闪退；改为 URL Rewrite reject 元道广告配置接口（api.lbs.wintaosaas.com/api/adStrategy/match、adConfig/list、adConfig/newList、adRecord/add），并拦截第三方广告聚合与竞价通道（buluken.com、baihemob.com、hzjizhun.cn、hzzfcm.com、shunchangzhixing.com、yunxish.com、iggrowth.cn、vista.divms.cn/adn/v2/getAd、jt-sdk-ios.oss-cn-beijing.aliyuncs.com/iOSConfig.txt）。不修改定位、天气、拍照、水印模板及团队/用户业务接口。异常时禁用本模块即可回滚。
+#!name=元道经纬相机去广告-测试版 v5
+#!desc=v5：在 v4 不闪退基础上，补齐 160548.har 实测漏网的备用广告聚合与素材源（TopOn/AnyThink: statisticslinks.com、toponad.com、anythinktech.com；大狮聚合: dashisx.com；趣盟备用域名: cpc-service-square.58iclick.com；腾讯优量汇上报/配置: tdid.m.qq.com；百度百青藤素材: luimg.baidu.com/huitu/；淘宝AIGC与京东POP广告素材路径）。不修改定位、天气、拍照、水印模板及团队/用户业务接口。异常时禁用本模块即可回滚。
 
 [Rule]
 DOMAIN-SUFFIX,buluken.com,REJECT
@@ -9,14 +9,24 @@ DOMAIN,admin.hzjizhun.cn,REJECT
 DOMAIN,sdk.hzzfcm.com,REJECT
 DOMAIN-SUFFIX,yunxish.com,REJECT
 DOMAIN,cpc-service-square.iggrowth.cn,REJECT
+DOMAIN,cpc-service-square.58iclick.com,REJECT
+DOMAIN-SUFFIX,statisticslinks.com,REJECT
+DOMAIN-SUFFIX,toponad.com,REJECT
+DOMAIN-SUFFIX,anythinktech.com,REJECT
+DOMAIN-SUFFIX,dashisx.com,REJECT
 DOMAIN,sdkquic.e.qq.com,REJECT
+DOMAIN,tdid.m.qq.com,REJECT
+DOMAIN,t.microengine.cn,REJECT
+DOMAIN,qh-material.taobao.com,REJECT
+DOMAIN,luimg.baidu.com,REJECT
 
 [URL Rewrite]
-^https://api\.lbs\.wintaosaas\.com/api/(?:adStrategy/match|adConfig/(?:newList|list)|adRecord/add)(?:\?|$) _ reject
+^https://api\.lbs\.wintaosaas\.com/api/(?:adStrategy/match|adConfig/(?:newList|list)|adRecord/add|userCenter/checkAdTimeEffective)(?:\?|$) _ reject
 ^https://vista\.divms\.cn/adn/v2/getAd(?:\?|$) _ reject
 ^https?://admin\.hzjizhun\.cn/(?:infoConfig|errorReport|checkCd|setGInfo|base)/833269(?:\?|$) _ reject
 ^https?://ad\.baihemob\.com/(?:infoConfig|checkCd|setGInfo)/490252(?:\?|$) _ reject
 ^https://jt-sdk-ios\.oss-cn-beijing\.aliyuncs\.com/iOSConfig\.txt(?:\?|$) _ reject
+^https://img1\.360buyimg\.com/pop/jfs/ _ reject
 
 [MITM]
-hostname = %APPEND% api.lbs.wintaosaas.com, vista.divms.cn, ad.baihemob.com, jt-sdk-ios.oss-cn-beijing.aliyuncs.com
+hostname = %APPEND% api.lbs.wintaosaas.com, vista.divms.cn, ad.baihemob.com, jt-sdk-ios.oss-cn-beijing.aliyuncs.com, img1.360buyimg.com
