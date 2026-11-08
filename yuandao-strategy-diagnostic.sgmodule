@@ -1,8 +1,8 @@
-#!name=元道广告配置-诊断版 v2
-#!desc=配合v6测试，仅拒绝adConfig/list与newList，已撤销原adStrategy/match拦截。不拦checkAdTimeEffective或协议接口，不伪造响应。效果与兼容性未验证；隐私弹窗、闪退或启动异常时禁用本模块。MITM追加业务主机，对该主机全部HTTPS流量生效。
+#!name=元道策略与配置-合并诊断版 v3
+#!desc=配合主模块v6临时对照：合并拒绝adStrategy/match及adConfig/list、newList。不拦checkAdTimeEffective、adRecord或隐私协议接口，不伪造JSON或同意状态，不含单张素材规则。单组拦截均未去除广告；合并效果与兼容性待真机验证，可能仍显示缓存广告。若重复隐私弹窗、闪退或启动异常，禁用本诊断模块。MITM对业务主机全部HTTPS生效。
 
 [URL Rewrite]
-^https://api\.lbs\.wintaosaas\.com/api/adConfig/(?:list|newList)(?:\?|$) _ reject
+^https://api\.lbs\.wintaosaas\.com/api/(?:adStrategy/match|adConfig/(?:list|newList))(?:\?|$) _ reject
 
 [MITM]
 hostname = %APPEND% api.lbs.wintaosaas.com
