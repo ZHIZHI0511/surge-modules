@@ -1,8 +1,8 @@
-#!name=元道广告策略-单变量诊断
-#!desc=配合v6临时测试：仅拒绝/api/adStrategy/match，不拦checkAdTimeEffective、adConfig或协议接口。不保证去广告或兼容性。若隐私弹窗、闪退或启动异常，禁用本诊断模块，保留v6。MITM追加业务主机，解密范围为该主机全部HTTPS请求。
+#!name=元道广告配置-诊断版 v2
+#!desc=配合v6测试，仅拒绝adConfig/list与newList，已撤销原adStrategy/match拦截。不拦checkAdTimeEffective或协议接口，不伪造响应。效果与兼容性未验证；隐私弹窗、闪退或启动异常时禁用本模块。MITM追加业务主机，对该主机全部HTTPS流量生效。
 
 [URL Rewrite]
-^https://api\.lbs\.wintaosaas\.com/api/adStrategy/match(?:\?|$) _ reject
+^https://api\.lbs\.wintaosaas\.com/api/adConfig/(?:list|newList)(?:\?|$) _ reject
 
 [MITM]
 hostname = %APPEND% api.lbs.wintaosaas.com
