@@ -1,0 +1,18 @@
+#!name=Apple 天气与定位服务直连修复
+#!desc=强制 Apple 天气（WeatherKit）与定位服务（Location Services / 国家代码检测）域名走 DIRECT 直连并排除 MITM 解密，解决因代理分流或 MITM 证书导致的 iPhone 天气“当前位置”定位失败（--）及 Apple Watch 天气无法加载问题。
+
+[Rule]
+DOMAIN-SUFFIX,weatherkit.apple.com,DIRECT
+DOMAIN-SUFFIX,weather-data.apple.com,DIRECT
+DOMAIN-SUFFIX,weather-data-origin.apple.com,DIRECT
+DOMAIN-SUFFIX,weather-edge.apple.com,DIRECT
+DOMAIN-SUFFIX,weather-map.apple.com,DIRECT
+DOMAIN-SUFFIX,weather-map2.apple.com,DIRECT
+DOMAIN-SUFFIX,weather-analytics-events.apple.com,DIRECT
+DOMAIN-SUFFIX,ls.apple.com,DIRECT
+DOMAIN,gs-loc.apple.com,DIRECT
+DOMAIN,gs-loc-cn.apple.com,DIRECT
+DOMAIN,iphone-ld.apple.com,DIRECT
+
+[MITM]
+hostname = %APPEND% -weatherkit.apple.com, -*.weatherkit.apple.com, -weather-data.apple.com, -*.weather-data.apple.com, -weather-edge.apple.com, -weather-map.apple.com, -weather-map2.apple.com, -*.ls.apple.com, -gs-loc.apple.com, -gs-loc-cn.apple.com, -iphone-ld.apple.com
