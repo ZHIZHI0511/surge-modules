@@ -21,12 +21,12 @@ DOMAIN,qh-material.taobao.com,REJECT
 DOMAIN,luimg.baidu.com,REJECT
 
 [URL Rewrite]
-^https://api\\.lbs\\.wintaosaas\\.com/api/(?:adStrategy/match|adConfig/(?:newList|list)|adRecord/add|userCenter/checkAdTimeEffective)(?:\\?|$) _ reject
-^https://vista\\.divms\\.cn/adn/v2/getAd(?:\\?|$) _ reject
-^https?://admin\\.hzjizhun\\.cn/(?:infoConfig|errorReport|checkCd|setGInfo|base)/833269(?:\\?|$) _ reject
-^https?://ad\\.baihemob\\.com/(?:infoConfig|checkCd|setGInfo)/490252(?:\\?|$) _ reject
-^https://jt-sdk-ios\\.oss-cn-beijing\\.aliyuncs\\.com/iOSConfig\\.txt(?:\\?|$) _ reject
-^https://img1\\.360buyimg\\.com/pop/jfs/ _ reject
+^https://api\.lbs\.wintaosaas\.com/api/(?:adStrategy/match|adConfig/(?:newList|list)|adRecord/add|userCenter/checkAdTimeEffective)(?:\?|$) _ reject
+^https://vista\.divms\.cn/adn/v2/getAd(?:\?|$) _ reject
+^https?://admin\.hzjizhun\.cn/(?:infoConfig|errorReport|checkCd|setGInfo|base)/833269(?:\?|$) _ reject
+^https?://ad\.baihemob\.com/(?:infoConfig|checkCd|setGInfo)/490252(?:\?|$) _ reject
+^https://jt-sdk-ios\.oss-cn-beijing\.aliyuncs\.com/iOSConfig\.txt(?:\?|$) _ reject
+^https://img1\.360buyimg\.com/pop/jfs/ _ reject
 
 [MITM]
 hostname = %APPEND% api.lbs.wintaosaas.com, vista.divms.cn, ad.baihemob.com, jt-sdk-ios.oss-cn-beijing.aliyuncs.com, img1.360buyimg.com
