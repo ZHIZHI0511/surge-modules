@@ -1,0 +1,41 @@
+# NAME: Claude
+# DESC: Anthropic / Claude 分流规则（覆盖 Web / iOS / macOS Desktop / Claude Code / API）
+# REPO: https://github.com/ZHIZHI0511/surge-modules
+# UPDATED: 2026-11-10
+
+# > Anthropic & Claude 官方域名
+DOMAIN-SUFFIX,ant.dev
+DOMAIN-SUFFIX,anthropic.com
+DOMAIN-SUFFIX,anthropic.team
+DOMAIN-SUFFIX,antspace.dev
+DOMAIN-SUFFIX,chatbotclaude.com
+DOMAIN-SUFFIX,clau.de
+DOMAIN-SUFFIX,claude.ai
+DOMAIN-SUFFIX,claude.app
+DOMAIN-SUFFIX,claude.com
+DOMAIN-SUFFIX,claude.dev
+DOMAIN-SUFFIX,claude.new
+DOMAIN-SUFFIX,claude.site
+DOMAIN-SUFFIX,claudeacademy.com
+DOMAIN-SUFFIX,claudemcpclient.com
+DOMAIN-SUFFIX,claudemcpcontent.com
+DOMAIN-SUFFIX,claudepages.dev
+DOMAIN-SUFFIX,claudestudio.com
+DOMAIN-SUFFIX,claudeusercontent.com
+
+# > Claude Platform on AWS 专用入口
+DOMAIN-KEYWORD,aws-external-anthropic
+
+# > Anthropic 静态资源、文档与专属遥测端点
+DOMAIN,browser-intake-us5-datadoghq.com
+DOMAIN,cdn.usefathom.com
+DOMAIN,claude-code.mintlify.site
+DOMAIN,http-intake.logs.us5.datadoghq.com
+DOMAIN,o1158394.ingest.us.sentry.io
+DOMAIN,servd-anthropic-website.b-cdn.net
+
+# > Anthropic 官方自持 IP 段 (ARIN AP-2440 / AS399358)
+IP-CIDR,153.61.0.0/16,no-resolve
+IP-CIDR,160.79.104.0/21,no-resolve
+IP-CIDR,216.73.216.0/22,no-resolve
+IP-CIDR6,2607:6bc0::/32,no-resolve
