@@ -1,91 +1,164 @@
-#!name=拼多多精准去广告（首页金刚区/聊天/个人中心/全局弹窗）
-#!desc=基于 8.33.0 真机 HAR 实抓精准定制：①首页移除金刚区（icon_set/slide_icon_set/icon_fold_zone）与异形横幅，保留3栏底栏②个人中心置空推广图标/横幅与30天缓存策略，移除专属客服入口并保留省钱月卡与常用功能栏③彻底拦截个人中心与聊天页推荐流及 goods/back_up 兜底推荐流④聊天页顶部资源位返回标准空成功响应覆写旧缓存⑤拦截开屏、全局弹窗（含 backup_data）及新版 /v3/d HTTPDNS 与全部 Titan 通道。更新后请先在拼多多「设置→清除缓存」再彻底杀掉后台重进。
+#!name=拼多多精准去广告（首页精简/聊天/个人中心/全局弹窗）
+#!desc=基于 8.33.0 真机 HAR 实抓精准定制：①首页移除金刚区、顶部大促标签（11.11等）、拼小圈横条、多多买菜横排、百亿补贴横排与异形横幅，保留3栏底栏②个人中心置空推广图标/横幅与30天缓存策略，移除专属客服入口并保留省钱月卡与常用功能栏③彻底拦截个人中心与聊天页推荐流及 goods/back_up 兜底推荐流④聊天页顶部资源位覆写空成功响应⑤拦截开屏、全局弹窗及 H5 红包弹窗页⑥全量封堵 HTTPDNS/QUIC/xg/meta/titan*/api-ipv6 及三网裸 IPv4/IPv6 长连接（全线采用 REJECT-NO-DROP 防止静默丢包触发刷新回退）。更新后请先在拼多多「设置→清除缓存」再彻底杀掉后台重进。
 #!system=ios
 
 [Rule]
-# 拦截拼多多 HTTPDNS（兼容旧版 /d、/d5 与 8.33.0 新版 /v3/d）与 QUIC
-AND,((URL-REGEX, "^http:\/\/((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(v\d+\/)?d(\d)?"), (USER-AGENT, "*com.xunmeng.pinduoduo*")),REJECT
-AND,((URL-REGEX, "^http:\/\/\[[0-9a-fA-F:]+\]\/(v\d+\/)?d(\d)?\?"), (USER-AGENT, "*com.xunmeng.pinduoduo*")),REJECT
-AND,((DOMAIN, api.pinduoduo.com), (PROTOCOL, QUIC)),REJECT
-AND,((DOMAIN, api.yangkeduo.com), (PROTOCOL, QUIC)),REJECT
+# 拦截拼多多 HTTPDNS（兼容 /d、/d5 与 8.33.0 新版 /v3/d），使用 REJECT-NO-DROP 避免触发 REJECT-DROP 静默卡顿与回退
+AND,((URL-REGEX, "^http:\/\/((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(v\d+\/)?d(\d)?"), (USER-AGENT, "*com.xunmeng.pinduoduo*")),REJECT-NO-DROP
+AND,((URL-REGEX, "^http:\/\/\[[0-9a-fA-F:]+\]\/(v\d+\/)?d(\d)?\?"), (USER-AGENT, "*com.xunmeng.pinduoduo*")),REJECT-NO-DROP
 
-# 拦截拼多多 Meta 调度与 Titan 长连接域名，强制回落至标准 HTTPS
-DOMAIN,meta.pinduoduo.com,REJECT,pre-matching
-DOMAIN,titan.pinduoduo.com,REJECT,pre-matching
-DOMAIN,titan-mt.pinduoduo.com,REJECT,pre-matching
-DOMAIN,titan-a.pinduoduo.com,REJECT,pre-matching
-DOMAIN,titan-b.pinduoduo.com,REJECT,pre-matching
-DOMAIN,titan-c.pinduoduo.com,REJECT,pre-matching
-DOMAIN,titan-v2.pinduoduo.com,REJECT,pre-matching
-DOMAIN,titan.yangkeduo.com,REJECT,pre-matching
-DOMAIN,titan-mt.yangkeduo.com,REJECT,pre-matching
-DOMAIN,longlink.pinduoduo.com,REJECT,pre-matching
+# 整站拦截拼多多 QUIC (UDP 443)，强制回落至标准 HTTPS 供 MITM 捕获
+AND,((DOMAIN-SUFFIX, pinduoduo.com), (PROTOCOL, QUIC)),REJECT-NO-DROP
+AND,((DOMAIN-SUFFIX, yangkeduo.com), (PROTOCOL, QUIC)),REJECT-NO-DROP
+AND,((DOMAIN-SUFFIX, pinduoduo.net), (PROTOCOL, QUIC)),REJECT-NO-DROP
 
-# 拦截拼多多 Titan 裸 IPv4/IPv6 长连接（no-resolve 不影响正常域名 HTTPS 请求）
-IP-CIDR,49.51.78.195/32,REJECT,no-resolve
-IP-CIDR,49.234.0.11/32,REJECT,no-resolve
-IP-CIDR,49.234.0.114/32,REJECT,no-resolve
-IP-CIDR,49.234.0.115/32,REJECT,no-resolve
-IP-CIDR,49.234.252.81/32,REJECT,no-resolve
-IP-CIDR,49.234.252.114/32,REJECT,no-resolve
-IP-CIDR,49.234.252.116/32,REJECT,no-resolve
-IP-CIDR,49.234.252.117/32,REJECT,no-resolve
-IP-CIDR,49.235.102.10/32,REJECT,no-resolve
-IP-CIDR,49.235.102.100/32,REJECT,no-resolve
-IP-CIDR,49.235.102.101/32,REJECT,no-resolve
-IP-CIDR,49.235.102.145/32,REJECT,no-resolve
-IP-CIDR,49.235.102.146/32,REJECT,no-resolve
-IP-CIDR,49.235.102.147/32,REJECT,no-resolve
-IP-CIDR,49.235.102.190/32,REJECT,no-resolve
-IP-CIDR,49.235.102.191/32,REJECT,no-resolve
-IP-CIDR,49.235.102.192/32,REJECT,no-resolve
-IP-CIDR,49.235.102.235/32,REJECT,no-resolve
-IP-CIDR,49.235.102.236/32,REJECT,no-resolve
-IP-CIDR,49.235.102.237/32,REJECT,no-resolve
-IP-CIDR,81.69.104.17/32,REJECT,no-resolve
-IP-CIDR,81.69.104.33/32,REJECT,no-resolve
-IP-CIDR,81.69.105.47/32,REJECT,no-resolve
-IP-CIDR,81.69.105.56/32,REJECT,no-resolve
-IP-CIDR,81.69.116.17/32,REJECT,no-resolve
-IP-CIDR,81.69.116.33/32,REJECT,no-resolve
-IP-CIDR,81.69.130.121/32,REJECT,no-resolve
-IP-CIDR,81.69.204.21/32,REJECT,no-resolve
-IP-CIDR,81.69.208.12/32,REJECT,no-resolve
-IP-CIDR,81.69.208.23/32,REJECT,no-resolve
-IP-CIDR,81.69.212.29/32,REJECT,no-resolve
-IP-CIDR,111.231.95.17/32,REJECT,no-resolve
-IP-CIDR,111.231.130.223/32,REJECT,no-resolve
-IP-CIDR,117.185.244.145/32,REJECT,no-resolve
-IP-CIDR,119.28.183.248/32,REJECT,no-resolve
-IP-CIDR,121.5.84.15/32,REJECT,no-resolve
-IP-CIDR,124.156.122.186/32,REJECT,no-resolve
-IP-CIDR,170.106.62.26/32,REJECT,no-resolve
-IP-CIDR,175.24.144.100/32,REJECT,no-resolve
-IP-CIDR,183.194.214.14/32,REJECT,no-resolve
-IP-CIDR,183.194.214.20/32,REJECT,no-resolve
-IP-CIDR,183.194.214.21/32,REJECT,no-resolve
-IP-CIDR,212.129.220.101/32,REJECT,no-resolve
-IP-CIDR,212.129.220.102/32,REJECT,no-resolve
-IP-CIDR,212.129.220.108/32,REJECT,no-resolve
-IP-CIDR,212.129.220.109/32,REJECT,no-resolve
-IP-CIDR,212.129.220.115/32,REJECT,no-resolve
-IP-CIDR,212.129.220.116/32,REJECT,no-resolve
-IP-CIDR,212.129.220.122/32,REJECT,no-resolve
-IP-CIDR,212.129.220.124/32,REJECT,no-resolve
-IP-CIDR,212.129.232.162/32,REJECT,no-resolve
-IP-CIDR6,2402:4e00:c030:1b00::e/128,REJECT,no-resolve
-IP-CIDR6,2402:4e00:c030:1b00::3a/128,REJECT,no-resolve
-IP-CIDR6,2402:4e00:c030:1b00::60/128,REJECT,no-resolve
-IP-CIDR6,2402:4e00:c030:1b00::63/128,REJECT,no-resolve
-IP-CIDR6,2402:4e00:c032:200::22/128,REJECT,no-resolve
-IP-CIDR6,2402:4e00:c032:200::a8/128,REJECT,no-resolve
-IP-CIDR6,2409:8c1e:75b0:4e::2b/128,REJECT,no-resolve
-IP-CIDR6,2409:8c20:5022:2000:0:4:0:311/128,REJECT,no-resolve
-IP-CIDR6,240d:c000:f000:ac00:3896:d1ce:30a2:1/128,REJECT,no-resolve
+# 拦截拼多多信道探测、动态调度、QUIC 入口与全部 Titan 长连接域名（使用 REJECT-NO-DROP 立即回 RST 迫使回落 HTTPS）
+DOMAIN,meta.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,xg.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,quic.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,titan.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,titan-mt.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,titan-im.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,titan-a.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,titan-b.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,titan-c.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,titan-v2.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,titan.yangkeduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,titan-mt.yangkeduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,titan-im.yangkeduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,longlink.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,api-ipv6.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,api-ipv6.yangkeduo.com,REJECT-NO-DROP,pre-matching
+
+# 拦截拼多多埋点与网络诊断上报域名
+DOMAIN,apm.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,apm-a.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,th.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,th-a.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,th-b.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,ta.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,ta-a.pinduoduo.com,REJECT-NO-DROP,pre-matching
+DOMAIN,abtk.pinduoduo.com,REJECT-NO-DROP,pre-matching
+
+# 拦截拼多多 Titan / HTTPDNS / 三网裸 IPv4/IPv6 直连通道（no-resolve 仅拦截绕过 DNS 的裸 IP 长连接/QUIC，不影响正常域名 HTTPS）
+IP-CIDR,49.51.78.195/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.234.0.11/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.234.0.114/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.234.0.115/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.234.252.81/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.234.252.114/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.234.252.116/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.234.252.117/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.235.102.10/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.235.102.100/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.235.102.101/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.235.102.145/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.235.102.146/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.235.102.147/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.235.102.190/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.235.102.191/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.235.102.192/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.235.102.235/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.235.102.236/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,49.235.102.237/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,81.69.68.125/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,81.69.104.17/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,81.69.104.33/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,81.69.104.51/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,81.69.105.47/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,81.69.105.56/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,81.69.105.59/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,81.69.116.17/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,81.69.116.33/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,81.69.130.121/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,81.69.130.131/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,81.69.204.21/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,81.69.208.12/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,81.69.208.23/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,81.69.212.29/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,81.69.238.201/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,101.35.204.35/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,101.35.212.35/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,101.226.147.13/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,101.226.152.31/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,101.226.152.59/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,101.226.152.67/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,111.231.95.17/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,111.231.95.103/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,111.231.130.223/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,111.231.186.137/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,111.231.186.152/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,111.231.186.176/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,111.231.186.190/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,111.231.186.208/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,111.231.186.222/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,114.110.96.6/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,114.110.96.26/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,114.110.97.30/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,114.110.97.97/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,116.128.184.22/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,117.185.242.18/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,117.185.242.150/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,117.185.242.187/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,117.185.244.25/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,117.185.244.54/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,117.185.244.145/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,117.185.244.212/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,119.28.183.248/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,121.5.84.15/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,121.5.84.85/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,124.156.122.186/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,170.106.62.26/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,175.24.144.100/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,180.163.214.155/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,183.194.214.14/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,183.194.214.20/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,183.194.214.21/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,212.129.220.101/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,212.129.220.102/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,212.129.220.108/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,212.129.220.109/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,212.129.220.115/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,212.129.220.116/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,212.129.220.122/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,212.129.220.124/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,212.129.232.162/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,220.196.137.58/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,220.196.137.122/32,REJECT-NO-DROP,no-resolve
+IP-CIDR,220.196.137.227/32,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2402:4e00:1400:4600:0:8f2f:cce0:63e8/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2402:4e00:1400:4600:0:8f2f:cd1d:49a4/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2402:4e00:1408:9200:0:98ab:1323:7e82/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2402:4e00:1408:9201:0:98ab:1374:ce8e/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2402:4e00:c030:1b00::e/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2402:4e00:c030:1b00::3a/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2402:4e00:c030:1b00::60/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2402:4e00:c030:1b00::63/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2402:4e00:c032:200::22/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2402:4e00:c032:200::a8/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2408:80f1:21:404d::19/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2408:80f1:21:404d::32/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2408:80f1:21:404e::1a/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2408:80f1:21:500a::20/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2408:80f1:21:500c::11/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2408:873d:1022:4000:0:2:0:238/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2409:8c1e:75b0:4d::4a/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2409:8c1e:75b0:4e::2b/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2409:8c1e:75b0:4e::37/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2409:8c1e:75b0:3007::53/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2409:8c1e:75b0:300e::3b/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,2409:8c20:5022:2000:0:4:0:311/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,240d:c000:f000:ac00:3896:d1ce:30a2:1/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,240e:e1:aa00:47::61/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,240e:e1:aa00:84::18/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,240e:e1:aa00:84::35/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,240e:e1:aa00:1007::62/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,240e:e1:aa00:100f::20/128,REJECT-NO-DROP,no-resolve
+IP-CIDR6,240e:979:e03:2000:0:5:0:1e7/128,REJECT-NO-DROP,no-resolve
 
 [Body Rewrite]
-# 1. 首页：移除金刚区、顶部大促标签（如11.11大促）、拼小圈横条、多多买菜横排、百亿补贴横排与异形横幅，保留3栏底栏（首页/聊天/个人中心）
-http-response-jq (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/alexa\/homepage\/hub(\/refresh)?(\?|$) 'if (.result? | type) == "object" then del(.result.icon_set, .result.slide_icon_set, .result.icon_fold_zone, .result.dy_module.irregular_banner_dy, .result.dy_module.recommend_fresh_info, .result.dy_module.recommend_fresh_info_lite, .result.dy_module.billion_subsidy_entrance, .result.dy_module.billion_subsidy_entrance_dy, .result.dy_module.billion_subsidy_entrance_lite) | .result.timeline_visible = false | .result.timeline_in_white = false | if (.result.module_order? | type) == "array" then .result.module_order |= map(select((.module_name? // "") | IN("irregular_banner","irregular_banner_dy","timeline","icon_set","ad_module","recommend_fresh_info","recommend_fresh_info_lite","billion_subsidy_entrance","billion_subsidy_entrance_dy","billion_subsidy_entrance_lite") | not)) else . end | if (.result.all_top_opts? | type) == "array" then (.result.all_top_opts | map(select((.tab_id? // 0) | IN(1, 2)) | del(.selected_image, .image, .height, .width))) as $t | if ($t | length) > 0 then .result.all_top_opts = $t else . end else . end | if (.result.bottom_tabs? | type) == "array" then (.result.bottom_tabs | map(select(((.link? // "") | tostring | (split("?")[0] // "") | (split("#")[0] // "")) | IN("index.html","chat_list.html","personal.html")))) as $k | if ($k | length) > 0 then .result.bottom_tabs = $k else . end else . end | if (.result.buffer_bottom_tabs? | type) == "array" then (.result.buffer_bottom_tabs | map(select(((.link? // "") | tostring | (split("?")[0] // "") | (split("#")[0] // "")) | IN("index.html","chat_list.html","personal.html")))) as $k2 | if ($k2 | length) > 0 then .result.buffer_bottom_tabs = $k2 else . end else . end else . end'
+# 1. 首页：移除金刚区、顶部大促标签（如11.11大促）、拼小圈横条与异形横幅，保留多多买菜、百亿补贴与3栏底栏（首页/聊天/个人中心）
+http-response-jq (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/alexa\/homepage\/hub(\/refresh)?(\?|$) 'if (.result? | type) == "object" then del(.result.icon_set, .result.slide_icon_set, .result.icon_fold_zone, .result.home_screen_skin.timeline, .result.dy_module.irregular_banner_dy) | .result.timeline_visible = false | .result.timeline_in_white = false | if (.result.module_order? | type) == "array" then .result.module_order |= map(select((.module_name? // "") | IN("irregular_banner","irregular_banner_dy","timeline","icon_set","ad_module") | not)) else . end | if (.result.all_top_opts? | type) == "array" then (.result.all_top_opts | map(select((.tab_id? // 0) | IN(1, 2)) | del(.selected_image, .image, .height, .width))) as $t | if ($t | length) > 0 then .result.all_top_opts = $t else . end else . end | if (.result.bottom_tabs? | type) == "array" then (.result.bottom_tabs | map(select(((.link? // "") | tostring | (split("?")[0] // "") | (split("#")[0] // "")) | IN("index.html","chat_list.html","personal.html")))) as $k | if ($k | length) > 0 then .result.bottom_tabs = $k else . end else . end | if (.result.buffer_bottom_tabs? | type) == "array" then (.result.buffer_bottom_tabs | map(select(((.link? // "") | tostring | (split("?")[0] // "") | (split("#")[0] // "")) | IN("index.html","chat_list.html","personal.html")))) as $k2 | if ($k2 | length) > 0 then .result.buffer_bottom_tabs = $k2 else . end else . end else . end'
 
 # 1b. 首页拼小圈横条入口（清除入口对象并隐藏开关）
 http-response-jq (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/social\/timeline\/v4\/get\/entrance(\?|$) 'if (type == "object") then del(.entrance, .entrance_icon_image, .timeline_jump_url) else . end'
@@ -104,8 +177,9 @@ http-response-jq (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/growth\/na
 http-response-jq (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/zaire_biz\/chat\/resource\/get_list_data(\?|$) '{"success":true,"error_code":1000000,"result":{}}'
 
 [Map Local]
-# 6. 开屏广告
+# 6. 开屏广告与 H5 红包现金弹窗页
 (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/cappuccino\/splash(\?|$) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+(?i)^https:\/\/m\.pinduoduo\.net\/vlayer_tab_popup\.html(\?|$) data-type=text data="" status-code=200 header="Content-Type:text/html"
 
 # 7. 个人中心：移除下方双列推荐商品流
 (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/caterham\/v3\/query\/personal(\?|$) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
@@ -116,5 +190,9 @@ http-response-jq (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/zaire_biz\
 # 9. 兜底商品推荐流（彻底拦截 personal / new_chat_group 为空后触发的 back_up 兜底商品流）
 (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/alexa\/goods\/back_up(\?|$) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
+# 10. 网络信道策略扩展探测与桌面限时秒杀快捷方式
+(?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/phantom\/gbdbpdv\/extra(\?|$) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+(?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/manufacturer\/cross\/shortcut\/list(\?|$) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
 [MITM]
-hostname = %APPEND% api.pinduoduo.com, api.yangkeduo.com
+hostname = %APPEND% api.pinduoduo.com, api.yangkeduo.com, m.pinduoduo.net
