@@ -1,11 +1,11 @@
 #!name=拼多多精准去广告（首页金刚区/聊天/个人中心/全局弹窗）
-#!desc=精准移除：①首页金刚区与异形横幅（保留3栏底栏）②个人中心下方服务图标、限时秒杀/特卖横幅与推荐流（保留省钱月卡与常用功能栏）③聊天页顶部大促/秒杀条与推荐流④开屏与全局活动弹窗。补齐全部 Titan 长连接域名、meta 调度域及 IPv4/IPv6 裸连防绕过。更新模块后请彻底杀掉拼多多后台重进。
+#!desc=基于 8.33.0 真机 HAR 实抓精准定制：①首页移除金刚区（icon_set/slide_icon_set/icon_fold_zone）与异形横幅，保留3栏底栏②个人中心置空推广图标/横幅与30天缓存策略，移除专属客服入口并保留省钱月卡与常用功能栏③彻底拦截个人中心与聊天页推荐流及 goods/back_up 兜底推荐流④聊天页顶部资源位返回标准空成功响应覆写旧缓存⑤拦截开屏、全局弹窗（含 backup_data）及新版 /v3/d HTTPDNS 与全部 Titan 通道。更新后请先在拼多多「设置→清除缓存」再彻底杀掉后台重进。
 #!system=ios
 
 [Rule]
-# 拦截拼多多 HTTPDNS 与 QUIC，避免绕过 Surge MITM
-AND,((URL-REGEX, "^http:\/\/((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/d(\d)?"), (USER-AGENT, "*com.xunmeng.pinduoduo*")),REJECT
-AND,((URL-REGEX, "^http:\/\/\[[0-9a-fA-F:]+\]\/d(\d)?\?"), (USER-AGENT, "*com.xunmeng.pinduoduo*")),REJECT
+# 拦截拼多多 HTTPDNS（兼容旧版 /d、/d5 与 8.33.0 新版 /v3/d）与 QUIC
+AND,((URL-REGEX, "^http:\/\/((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(v\d+\/)?d(\d)?"), (USER-AGENT, "*com.xunmeng.pinduoduo*")),REJECT
+AND,((URL-REGEX, "^http:\/\/\[[0-9a-fA-F:]+\]\/(v\d+\/)?d(\d)?\?"), (USER-AGENT, "*com.xunmeng.pinduoduo*")),REJECT
 AND,((DOMAIN, api.pinduoduo.com), (PROTOCOL, QUIC)),REJECT
 AND,((DOMAIN, api.yangkeduo.com), (PROTOCOL, QUIC)),REJECT
 
@@ -84,30 +84,33 @@ IP-CIDR6,2409:8c20:5022:2000:0:4:0:311/128,REJECT,no-resolve
 IP-CIDR6,240d:c000:f000:ac00:3896:d1ce:30a2:1/128,REJECT,no-resolve
 
 [Body Rewrite]
-# 1. 首页：移除金刚区与异形活动横幅，并合并保留3栏底栏（首页/聊天/个人中心）
-http-response-jq (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/alexa\/homepage\/hub(\/refresh)?(\?|$) 'if (.result? | type) == "object" then del(.result.icon_set, .result.dy_module.irregular_banner_dy) | if (.result.bottom_tabs? | type) == "array" then (.result.bottom_tabs | map(select(((.link? // "") | tostring | (split("?")[0] // "") | (split("#")[0] // "")) | IN("index.html","chat_list.html","personal.html")))) as $k | if ($k | length) > 0 then .result.bottom_tabs = $k else . end else . end | if (.result.buffer_bottom_tabs? | type) == "array" then (.result.buffer_bottom_tabs | map(select(((.link? // "") | tostring | (split("?")[0] // "") | (split("#")[0] // "")) | IN("index.html","chat_list.html","personal.html")))) as $k2 | if ($k2 | length) > 0 then .result.buffer_bottom_tabs = $k2 else . end else . end else . end'
+# 1. 首页：移除金刚区（icon_set / slide_icon_set / icon_fold_zone）与异形活动横幅，并合并保留3栏底栏（首页/聊天/个人中心）
+http-response-jq (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/alexa\/homepage\/hub(\/refresh)?(\?|$) 'if (.result? | type) == "object" then del(.result.icon_set, .result.slide_icon_set, .result.icon_fold_zone, .result.dy_module.irregular_banner_dy) | if (.result.bottom_tabs? | type) == "array" then (.result.bottom_tabs | map(select(((.link? // "") | tostring | (split("?")[0] // "") | (split("#")[0] // "")) | IN("index.html","chat_list.html","personal.html")))) as $k | if ($k | length) > 0 then .result.bottom_tabs = $k else . end else . end | if (.result.buffer_bottom_tabs? | type) == "array" then (.result.buffer_bottom_tabs | map(select(((.link? // "") | tostring | (split("?")[0] // "") | (split("#")[0] // "")) | IN("index.html","chat_list.html","personal.html")))) as $k2 | if ($k2 | length) > 0 then .result.buffer_bottom_tabs = $k2 else . end else . end else . end'
 
-# 2. 全局活动/红包/优惠券弹窗（兼容 aquarius/flow 与 window/global 路径，清空弹窗列表）
-http-response-jq (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/(aquarius|flow)\/hungary\/(window\/)?global\/ 'if (type == "object" and (.list? | type) == "array") then .list = [] else . end | if (type == "object" and (.result? | type) == "object" and (.result.list? | type) == "array") then .result.list = [] else . end'
+# 2. 全局活动/红包/优惠券弹窗（兼容 aquarius/flow 与 window/global 路径，清空 list 与 backup_data）
+http-response-jq (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/(aquarius|flow)\/hungary\/(window\/)?global\/ 'if (type == "object") then del(.backup_data) | if (.list? | type) == "array" then .list = [] else . end | if (.result? | type) == "object" and (.result.list? | type) == "array" then .result.list = [] else . end else . end'
 
-# 3. 个人中心：移除第二排服务推广图标（专属客服/免费领礼物/火车票/首件抢五折）与活动横幅（保留省钱月卡）
-http-response-jq (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/philo\/personal\/hub(\?|$) 'del(.icon_set.icons, .icon_set.top_personal_icons, .personal_banner, .personal_center_style_v2_vo)'
+# 3. 个人中心：置空第二排服务推广图标与横幅，移除缓存策略与专属客服入口（保留省钱月卡与订单/收藏/优惠券/收货地址/设置）
+http-response-jq (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/philo\/personal\/hub(\?|$) 'if (type == "object") then del(.personal_banner, .personal_center_style_v2_vo) | .show_recommend_feed_banner = false | if (.icon_set? | type) == "object" then del(.icon_set.cache_strategy) | .icon_set.icons = [] | .icon_set.top_personal_icons = [] | if (.icon_set.third_personal_icons? | type) == "array" then .icon_set.third_personal_icons |= map(select(.app_name != "customer_service")) else . end else . end else . end'
 
 # 4. 推送/拉新横幅兜底（限时秒杀/大促优惠/9块9特卖横幅）
 http-response-jq (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/growth\/nagato\/app\/index\/gather(\?|$) 'if (type == "object" and has("newer_index_banner")) then .newer_index_banner = {"valid_data":false} else . end | if (type == "object" and has("push_banner")) then .push_banner = {"valid_data":false} else . end'
 
+# 5. 聊天页顶部推广资源位（返回标准空成功响应，主动覆盖本地横幅缓存）
+http-response-jq (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/zaire_biz\/chat\/resource\/get_list_data(\?|$) '{"success":true,"error_code":1000000,"result":{}}'
+
 [Map Local]
-# 5. 开屏广告
+# 6. 开屏广告
 (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/cappuccino\/splash(\?|$) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
-# 6. 个人中心：移除下方双列推荐商品流
+# 7. 个人中心：移除下方双列推荐商品流
 (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/caterham\/v3\/query\/personal(\?|$) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
-# 7. 聊天页：移除顶部推广资源位（限时秒杀/大促优惠横幅）
-(?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/zaire_biz\/chat\/resource\/get_list_data(\?|$) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 # 8. 聊天页：移除下方双列推荐商品流
 (?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/caterham\/v3\/query\/new_chat_group(\?|$) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# 9. 兜底商品推荐流（彻底拦截 personal / new_chat_group 为空后触发的 back_up 兜底商品流）
+(?i)^https:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/alexa\/goods\/back_up(\?|$) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [MITM]
 hostname = %APPEND% api.pinduoduo.com, api.yangkeduo.com
